@@ -19,19 +19,45 @@ class JustCalc:
 
 
         # Configure dark mode colors
-        self.bg_color = '#2b2b2b'  # Dark background
-        self.fg_color = '#ffffff'  # White text
-        self.medium_color = "#5f5f5f" #medium
-        self.text_bg = '#3c3f41'   # Slightly lighter dark for text areas
-        self.text_fg = '#ffffff'   # White text in text areas
-        self.insert_color = '#ffffff'  # White cursor
-        self.select_bg = '#4c5052'  # Selection background
-        self.border_color = "#000000" #border
-        self.arrow_color = self.fg_color #arrow
+        self.black = "#000000"
+        self.text_color = "#ffffff"
+        self.light_color = "#9f9f9f"
+        self.medium_color = "#222222"
+        self.dark_color = "#2b2b2b"
+        self.accent_color = "#5f5f5f"
+        self.light_accent_color = "#bb2200"
+        self.medium_accent_color = "#664400"
+        self.dark_accent_color = "#000000"
+
+        self.border_thickness = 1
+        self.padding = 4
+        self.text_size = 11
+        self.font = 'Consolas'
+        self.precision = 6
+        self.default_height_lines = 5
+
+        self.bg_color = self.dark_color
+        self.fg_color = self.text_color  # text
+        
+        self.text_bg = self.medium_color   # Slightly lighter dark for text areas
+        self.text_fg = self.text_color   # White text in text areas
+        self.select_bg_color=self.light_color,
+        self.select_fg_color=self.dark_color,
+        self.insert_color = self.text_color  # White cursor
+        self.select_bg = self.light_color  # Selection background
+        self.border_color = self.light_color
+        self.border_selected_color = self.light_accent_color
+        self.arrow_color = self.text_color #arrow
+
+        
 
 
         self.window = tk.Tk()
         self.style = ttk.Style()
+        
+        # Angle mode (False=radians, True=degrees)
+        self.use_degrees = tk.BooleanVar(value=False)
+        
         self.setup_window()
         self.create_widgets()
         
@@ -63,8 +89,8 @@ class JustCalc:
         """
 
         # Make columns expand
-        self.window.grid_columnconfigure(0, weight=2, minsize=100) 
-        self.window.grid_columnconfigure(1, weight=1, minsize=20)  
+        self.window.grid_columnconfigure(0, weight=8, minsize=200)
+        self.window.grid_columnconfigure(1, weight=8, minsize=200)  
         self.window.grid_columnconfigure(2, weight=0)  
         self.window.grid_rowconfigure(0, weight=1)
         
@@ -72,41 +98,50 @@ class JustCalc:
         # Create text widgets with dark theme
         self.expression_text = tk.Text(
             self.window,
-            height=5, 
-            #width=50,
+            height=self.default_height_lines, 
+            width=150,
             bg=self.text_bg,
             fg=self.text_fg,
+            highlightthickness=self.border_thickness,
+            highlightcolor=self.border_selected_color,
+            highlightbackground=self.border_color,
             insertbackground=self.insert_color,
             selectbackground=self.select_bg,
             selectforeground=self.text_fg,
             relief='flat',
             borderwidth=0,
-            font=('Consolas', 10)
+            font=(self.font, self.text_size)
         )
         
         self.answer_text = tk.Text(
             #self.frame_middle, 
             self.window,
-            height=5, 
-            #width=25,
+            height=self.default_height_lines, 
+            width=100,
             bg=self.text_bg,
             fg=self.text_fg,
+            highlightthickness=self.border_thickness,
+            highlightcolor=self.border_selected_color,
+            highlightbackground=self.border_color,
             insertbackground=self.insert_color,
             selectbackground=self.select_bg,
             selectforeground=self.text_fg,
             relief='flat',
             borderwidth=0,
-            font=('Consolas', 10)
+            state='disabled',
+            takefocus=0,
+            cursor='arrow',
+            font=(self.font, self.text_size)
         )
         
          # Style the scrollbar
         self.style.configure("Custom.Vertical.TScrollbar",
             gripcount=0,
-            background=self.medium_color,   # the thumb color
+            background=self.light_color,   # the thumb color
             darkcolor=self.medium_color,    # shadow
             lightcolor=self.medium_color,   # highlight
             troughcolor=self.bg_color,      # track color
-            bordercolor=self.border_color,  
+            bordercolor=self.black,  
             arrowcolor=self.arrow_color     
         )
         self.scrollbar = ttk.Scrollbar(
@@ -115,19 +150,49 @@ class JustCalc:
             style="Custom.Vertical.TScrollbar"
         )
 
-
+        self.expression_text.tag_configure('sel', background=self.select_bg_color, foreground=self.select_fg_color)
+        self.answer_text.tag_configure('sel', background=self.select_bg_color, foreground=self.select_fg_color)
 
 
         # Pack widgets with proper spacing for dark theme
-        padding = 4
+        
         #self.expression_text.pack(fill=tk.BOTH, side=tk.LEFT, expand=True, padx=(4,4), pady=10)
         #self.answer_text.pack(fill=tk.BOTH, side=tk.LEFT, expand=False, padx=(0,4), pady=10)
         #self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y, padx=(0,4), pady=10)
 
         
-        self.expression_text.grid(row=0, column=0, sticky="nsew")
-        self.answer_text.grid(row=0, column=1, sticky="nsew")
-        self.scrollbar.grid(row=0, column=2, sticky="nsew")
+        self.expression_text.grid(row=0, column=0, sticky="nsew", padx=(self.padding,self.padding), pady=self.padding)
+        self.answer_text.grid(row=0, column=1, sticky="nsew", padx=(0,self.padding), pady=self.padding)
+        self.scrollbar.grid(row=0, column=2, sticky="ns")
+
+        # Angle mode toggle row
+        self.degrees_check = tk.Checkbutton(
+            self.window,
+            text="Use Degrees",
+            variable=self.use_degrees,
+            onvalue=True,
+            offvalue=False,
+            bg=self.bg_color,
+            fg=self.text_fg,
+            activebackground=self.bg_color,
+            activeforeground=self.text_fg,
+            selectcolor=self.bg_color,
+            highlightthickness=0,
+            command=lambda: self.evaluate_expressions()
+        )
+        self.degrees_check.grid(row=1, column=0, sticky="w", padx=self.padding, pady=(0, self.padding))
+
+        # Info label below editors
+        self.info_label = tk.Label(
+            self.window,
+            text="""Type expressions on the left. Results appear on the right. 
+Supports trig functions like sin(x), cos(x), variables x=5, x^2 and more.""",
+            bg=self.bg_color,
+            fg=self.light_color,
+            anchor='w',
+            justify='left'
+        )
+        self.info_label.grid(row=2, column=0, columnspan=3, sticky="ew", padx=self.padding, pady=(0, self.padding))
 
         
 
@@ -153,6 +218,15 @@ class JustCalc:
         
         # Bind window resize to update scrollbar visibility
         self.window.bind('<Configure>', self.delayed_scrollbar_check)
+
+        
+
+        def _select_expression_initial():
+            self.expression_text.focus_set()
+            #self.expression_text.tag_add("sel", "1.0", "end-1c")
+            #self.expression_text.mark_set("insert", "end-1c")
+
+        self.window.after(0, _select_expression_initial)
 
 
     def sync_scroll_positions(self):
@@ -230,7 +304,12 @@ class JustCalc:
             # Evaluate regular expression
             try:
                 result = self._evaluate_expression(line)
-                results.append(str(result))
+                if isinstance(result, float):
+                    # format float to fixed precision, strip trailing zeros but keep at least one decimal point
+                    formatted = f"{result:.{self.precision}f}"
+                    results.append(formatted)
+                else:
+                    results.append(str(result))
             except Exception as e:
                 #results.append(f"Error: {str(e)}")
                 results.append("Syntax Error")
@@ -262,9 +341,9 @@ class JustCalc:
         
         # Add math module functions to the local namespace
         local_vars = {
-            'sin': math.sin,
-            'cos': math.cos,
-            'tan': math.tan,
+            'sin': (lambda x: math.sin(math.radians(x))) if self.use_degrees.get() else math.sin,
+            'cos': (lambda x: math.cos(math.radians(x))) if self.use_degrees.get() else math.cos,
+            'tan': (lambda x: math.tan(math.radians(x))) if self.use_degrees.get() else math.tan,
             'sqrt': math.sqrt,
             'log': math.log10,  # Using log10 as log to match calculator convention
             'ln': math.log,     # Natural logarithm
