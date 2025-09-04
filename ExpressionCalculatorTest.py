@@ -29,7 +29,8 @@ class ExpressionCalculatorTest:
                 print(f"SUCCESS {name}")
             except Exception as e:
                 failed += 1
-                failed_test_names.append(name)
+                #failed_test_names.append(name)
+                failed_test_names.append({'name': name, 'num': i})
                 print(f"FAILED {name}   error: {e}")
                 #print(f"{e}")
 
@@ -152,7 +153,7 @@ class ExpressionCalculatorTest:
         #NOTE! should really be one test method for each case.
 
         test_variables_declarations = [
-            "x", "a", "some_word", "var1", "xyz12", "ab12cd"
+            "x=1", "a=2", "some_word=3", "var1=4", "xyz12=5", "ab12cd=6"
         ]
 
         test_expressions = [
@@ -160,8 +161,10 @@ class ExpressionCalculatorTest:
         ]
 
         # add the variable declarations to calc first
+        print(f"    ADDING VARIABLES")
         for expr in test_variables_declarations:
             calc.calculate(expr)
+        print(f"    DONE ADDING VARIABLES")
 
         failed_tests = []
         for expr in test_expressions:

@@ -13,30 +13,38 @@ class ExpressionCalculator:
         self.precision = 6
         self.use_degrees= use_degrees
         
-        
+        self.user_vars = {
+            
+        }
+
         # Local math functions with optional degree handling
         self.local_vars = {
-            'sin': (lambda x: math.sin(math.radians(x))) if self.get_use_degrees() else math.sin,
-            'cos': (lambda x: math.cos(math.radians(x))) if self.get_use_degrees() else math.cos,
-            'tan': (lambda x: math.tan(math.radians(x))) if self.get_use_degrees() else math.tan,
             'sqrt': math.sqrt,
             'log': math.log10,
             'ln': math.log,
             'exp': math.exp,
             'radians': math.radians,
             'degrees': math.degrees,
-            'abs': abs,
-            'round': round,
+            'abs': (lambda x: abs(x)),
+            'round': (lambda x: round(x)),
             'pi': math.pi,
             'e': math.e,
         }
 
-        #self.local_vars = {
-
-
-        self.user_vars = {
-            
+        self.math_vars_degrees = {
+            'sin': (lambda x: math.sin(math.radians(x))),
+            'cos': (lambda x: math.cos(math.radians(x))),
+            'tan': (lambda x: math.tan(math.radians(x))),
         }
+
+        self.math_vars_radians = {
+            'sin': (lambda x: math.sin(x)),
+            'cos': (lambda x: math.cos(x)),
+            'tan': (lambda x: math.tan(x)),
+        }
+
+        self.math_vars_degrees.update(self.local_vars)
+        self.math_vars_radians.update(self.local_vars)
     
 
     def set_use_degrees(self, state):
@@ -59,9 +67,11 @@ class ExpressionCalculator:
             try:
                 print(f"\tvar_name={var_name} expr={expr}")
                 result = self._calculate(expr)
-                self.local_vars[var_name] = result
+                #self.local_vars[var_name] = result
+                self.user_vars[var_name] = result
+                
                 print(f"\t{var_name} = {result}")
-                #return f"{var_name} = {result}"
+                
                 return True, result
             except Exception as e:
                 print("\n\t exception in variable assignment")
@@ -79,7 +89,7 @@ class ExpressionCalculator:
 
     def _contains_undeclared_variable(self, expression):
         print(f"  _contains_undeclared_variable({expression})")
-        res = self._find_free_vars(expression, self.local_vars)
+        res = self._find_free_vars(expression, self._get_vars())
         print(f"        undeclared vars len(res)={len(res)}   res: {res}")
         if res:
             print(f"        undeclared vars TRUE")
@@ -89,6 +99,25 @@ class ExpressionCalculator:
             return False
 
 
+    def _get_vars(self):
+        
+        if self.get_use_degrees():
+            vars = self.math_vars_degrees.copy()
+            vars.update(self.user_vars)
+            print(f"\n")
+            for name, val in vars.items():
+                print(f"    {name}:{val}")
+            return vars
+        else:
+            vars = self.math_vars_radians.copy()
+            vars.update(self.user_vars)
+            print(f"\n")
+            for name, val in vars.items():
+                print(f"    {name}:{val}")
+            return vars
+        
+
+
     def _calculate(self, expression):
         """Evaluate a mathematical expression and return the result.
 
@@ -96,29 +125,10 @@ class ExpressionCalculator:
         use_degrees is True, sin/cos/tan interpret the value in degrees.
         """
                 
-        print(f"_calculate expression={expression}")
-        
-        
-        self.local_vars = {
-            'sin': (lambda x: math.sin(math.radians(x))) if self.get_use_degrees() else math.sin,
-            'cos': (lambda x: math.cos(math.radians(x))) if self.get_use_degrees() else math.cos,
-            'tan': (lambda x: math.tan(math.radians(x))) if self.get_use_degrees() else math.tan,
-            'sqrt': math.sqrt,
-            'log': math.log10,
-            'ln': math.log,
-            'exp': math.exp,
-            'radians': math.radians,
-            'degrees': math.degrees,
-            'abs': abs,
-            'round': round,
-            'pi': math.pi,
-            'e': math.e,
-        }
-        
-
+        print(f"    _calculate({expression})")
 
         try:
-            result = eval(expression, {"__builtins__": {}}, self.local_vars)
+            result = eval(expression, {"__builtins__": {}}, self._get_vars())
             if isinstance(result, float) and result.is_integer():
                 return int(result)
             return result
