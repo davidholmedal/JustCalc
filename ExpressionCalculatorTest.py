@@ -40,35 +40,36 @@ class ExpressionCalculatorTest:
             print(f"\n\nTesting finished. Successfully! {len(tests)} tests")
         else:
             print(f"\n\nTesting finished. Failed {failed}/{len(tests)}")
-            print(f"\t{failed_test_names}")
+            for t in failed_test_names:
+                print(f"    {t['num']}:    {t['name']}")
 
     
     ### Test declarations below ###
     def test_addition(self):
             calc = ExpressionCalculator()
             res = calc.calculate("5+5")
-            if int(res) != 10: 
+            if res != '10':
                 raise Exception(f"failed addition: {res}")
         
 
     def test_subtraction(self):
         calc = ExpressionCalculator()
         res = calc.calculate("10-5")
-        if int(res) != 5: 
+        if res != '5': 
             raise Exception(f"failed subtraction: {res}")
 
 
     def test_multiplication(self):
         calc = ExpressionCalculator()
         res = calc.calculate("5*5")
-        if int(res) != 25: 
+        if res != '25': 
             raise Exception(f"failed multiplication: {res}")
     
 
     def test_division(self):
         calc = ExpressionCalculator()
         res = calc.calculate("25/5")
-        if int(res) != 5: 
+        if res != '5': 
             raise Exception(f"failed multiplication: {res}")
     
 
@@ -89,7 +90,7 @@ class ExpressionCalculatorTest:
     def test_variable_assignment(self):
         calc = ExpressionCalculator()
         res = calc.calculate("x=5")
-        if int(res) != 5: 
+        if res != '5': 
             raise Exception(f"failed variable assignment test: {res}")
 
 
@@ -151,7 +152,6 @@ class ExpressionCalculatorTest:
     def test_does_not_contain_undeclared_variable(self):
         calc = ExpressionCalculator()
         #NOTE! should really be one test method for each case.
-
         test_variables_declarations = [
             "x=1", "a=2", "some_word=3", "var1=4", "xyz12=5", "ab12cd=6"
         ]
@@ -161,10 +161,8 @@ class ExpressionCalculatorTest:
         ]
 
         # add the variable declarations to calc first
-        print(f"    ADDING VARIABLES")
         for expr in test_variables_declarations:
             calc.calculate(expr)
-        print(f"    DONE ADDING VARIABLES")
 
         failed_tests = []
         for expr in test_expressions:

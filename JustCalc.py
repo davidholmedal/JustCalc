@@ -15,8 +15,11 @@ class JustCalc:
         """Initialize the calculator application."""
         
         self.calculator = calculator
-
         
+        self.window = tk.Tk()
+        self.style = ttk.Style()
+        
+        self.use_degrees = tk.BooleanVar(value=self.calculator.get_use_degrees())
 
 
         # Configure dark mode colors
@@ -49,19 +52,11 @@ class JustCalc:
         self.border_color = self.light_color
         self.border_selected_color = self.light_accent_color
         self.arrow_color = self.text_color #arrow
-
-        
-
-
-        self.window = tk.Tk()
-        self.style = ttk.Style()
-        
-        # Angle mode (False=radians, True=degrees)
-        self.use_degrees = tk.BooleanVar(value=self.calculator.get_use_degrees())
         
         self.setup_window()
         self.create_widgets()
-        
+    
+    
     def setup_window(self):
         """Configure the main window properties."""
 
@@ -79,15 +74,6 @@ class JustCalc:
         
     def create_widgets(self):
         """Create and arrange all the widgets."""
-        """ 
-        self.frame_left = tk.Frame(self.window, bg=self.bg_color)
-        self.frame_middle = tk.Frame(self.window, bg=self.bg_color)
-        self.frame_right = tk.Frame(self.window, bg=self.bg_color)
-
-        self.frame_left.grid(row=0, column=0, sticky="nsew")
-        self.frame_middle.grid(row=0, column=1, sticky="nsew")
-        self.frame_right.grid(row=0, column=2, sticky="nsew")
-        """
 
         # Make columns expand
         self.window.grid_columnconfigure(0, weight=8, minsize=200)
@@ -316,43 +302,7 @@ Supports trig functions like sin(x), cos(x), variables x=5, x^2 and more.""",
         """Check scrollbar visibility after a short delay to ensure widget updates are complete."""
         self.window.after(100, self.update_scrollbar_visibility)
     
-    """
-    def _evaluate_expression(self, expr):
-        # Replace variable names with their values
-        for var_name, value in self.variables.items():
-            # Use word boundaries to avoid partial matches
-            expr = re.sub(r'\b' + re.escape(var_name) + r'\b', str(value), expr)
-        
-        # Replace ^ with ** for exponentiation
-        expr = expr.replace('^', '**')
-        
-        # Add math module functions to the local namespace
-        local_vars = {
-            'sin': (lambda x: math.sin(math.radians(x))) if self.use_degrees.get() else math.sin,
-            'cos': (lambda x: math.cos(math.radians(x))) if self.use_degrees.get() else math.cos,
-            'tan': (lambda x: math.tan(math.radians(x))) if self.use_degrees.get() else math.tan,
-            'sqrt': math.sqrt,
-            'log': math.log10,  # Using log10 as log to match calculator convention
-            'ln': math.log,     # Natural logarithm
-            'exp': math.exp,
-            'radians': math.radians,
-            'degrees': math.degrees,
-            'abs': abs,
-            'round': round,
-            'pi': math.pi,
-            'e': math.e
-        }
-        
-        try:
-            # Evaluate the expression safely
-            result = eval(expr, {"__builtins__": {}}, local_vars)
-            # Convert to integer if it's a whole number for cleaner display
-            if isinstance(result, float) and result.is_integer():
-                return int(result)
-            return result
-        except Exception as e:
-            raise ValueError(f"Could not evaluate: {expr}")
-"""
+
 
     def run(self):
         """Start the application main loop."""

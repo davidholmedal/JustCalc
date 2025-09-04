@@ -1,15 +1,11 @@
 import math
-from pickle import FALSE
 import re
+import string
 
 
 class ExpressionCalculator:
     def __init__(self, use_degrees: bool = False) -> None:
-        """Initialize calculator configuration.
-
-        Args:
-            use_degrees: If True, trig functions interpret inputs as degrees.
-        """
+        
         self.precision = 6
         self.use_degrees= use_degrees
         
@@ -17,8 +13,8 @@ class ExpressionCalculator:
             
         }
 
-        # Local math functions with optional degree handling
-        self.local_vars = {
+        # Local math functions
+        self.math_vars = {
             'sqrt': math.sqrt,
             'log': math.log10,
             'ln': math.log,
@@ -43,8 +39,8 @@ class ExpressionCalculator:
             'tan': (lambda x: math.tan(x)),
         }
 
-        self.math_vars_degrees.update(self.local_vars)
-        self.math_vars_radians.update(self.local_vars)
+        self.math_vars_degrees.update(self.math_vars)
+        self.math_vars_radians.update(self.math_vars)
     
 
     def set_use_degrees(self, state):
@@ -56,21 +52,14 @@ class ExpressionCalculator:
 
 
     def _do_variable_assignment(self, expression):
-        print(f"_do_variable_assignment({expression})")
         var_match = re.match(r'^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*(.+)$', expression)
-        print(f" after re.match {var_match}")
 
         if var_match:
-            print("\n\texpression contains variable assignment")
             var_name, expr = var_match.groups()
 
             try:
-                print(f"\tvar_name={var_name} expr={expr}")
                 result = self._calculate(expr)
-                #self.local_vars[var_name] = result
                 self.user_vars[var_name] = result
-                
-                print(f"\t{var_name} = {result}")
                 
                 return True, result
             except Exception as e:
@@ -81,111 +70,97 @@ class ExpressionCalculator:
     
     def _find_free_vars(self, expr, _vars):
         candidates = set(re.findall(r'\b[A-Za-z_]\w*\b', expr))
-        print(f"  candidates: {candidates}")
         undeclared_vars = sorted(name for name in candidates if name not in _vars)
-        print(f"  undeclared_vars: {undeclared_vars}")
         return undeclared_vars
 
 
     def _contains_undeclared_variable(self, expression):
-        print(f"  _contains_undeclared_variable({expression})")
         res = self._find_free_vars(expression, self._get_vars())
-        print(f"        undeclared vars len(res)={len(res)}   res: {res}")
+        
         if res:
-            print(f"        undeclared vars TRUE")
             return True
         else:
-            print(f"        undeclared vars FALSE")
             return False
 
 
     def _get_vars(self):
-        
         if self.get_use_degrees():
             vars = self.math_vars_degrees.copy()
             vars.update(self.user_vars)
-            print(f"\n")
-            for name, val in vars.items():
-                print(f"    {name}:{val}")
             return vars
         else:
             vars = self.math_vars_radians.copy()
             vars.update(self.user_vars)
-            print(f"\n")
-            for name, val in vars.items():
-                print(f"    {name}:{val}")
             return vars
         
 
 
     def _calculate(self, expression):
-        """Evaluate a mathematical expression and return the result.
-
-        Supports ^ for exponentiation and common math functions. If
-        use_degrees is True, sin/cos/tan interpret the value in degrees.
-        """
-                
-        print(f"    _calculate({expression})")
-
+        print(f"_calculate({expression})")
         try:
             result = eval(expression, {"__builtins__": {}}, self._get_vars())
-            if isinstance(result, float) and result.is_integer():
-                return int(result)
-            return result
+            print(f"    result::{result}  {type(result)}")
+
+            if isinstance(result, str):
+                print(f"    eval is string result:{result}")
+
+            
+            if isinstance(result, int):
+                return str(result)
+
+            
+            if isinstance(result, float):
+                if result.is_integer():
+                    return str(int(result))
+                
+                # format float to fixed precision, strip trailing zeros but keep at least one decimal point
+                formatted = f"{result:.{self.precision}f}"
+                result = formatted
+                return str(result)
+
+            if isinstance(result, str):
+                return result
+
         except Exception as e:
-            print(f"\n\t exception in _calc: {e}")
             raise ValueError(f"Could not evaluate: {expression}") from e
+    
+
 
 
     def calculate(self, expression: str):
-        print(f"\n calculate({expression})")
-
+        
         # Cleanup input string
         if expression is None:
-            print(f"expression is None{expression}")
-            raise ValueError("expression must be a string")
+            raise ValueError("expression is None")
 
         expression = expression.strip()
 
-        print(f"after strip:{expression}")
         # Is expression an empty string?
         if not expression:
             return ''
 
         # Replace ^ with ** for exponentiation
         expression = expression.replace('^', '**')
-        print(f"after replace ^ **:{expression}")
-
-
+        
         # first evaluate if it is a variable assignment, continue regardless
         success, res = self._do_variable_assignment(expression)
         if success:
-            print(f"variable assignment expr:{expression} result={res}")
             return str(res)
-        else:
-            print(f"No variable assignment {expression}")
-            
-
         
+        # has undeclared variable
         res = self._contains_undeclared_variable(expression)
         if res:
-            print("Contains undeclared variable")
             return "Contains undeclared variable"
-        else:
-            # Evaluate a 'normal' expression
-            print(f"        Doing normal calc: {expression}")
+        
 
-            try:
-                result = self._calculate(expression)
-                if isinstance(result, float):
-                    # format float to fixed precision, strip trailing zeros but keep at least one decimal point
-                    formatted = f"{result:.{self.precision}f}"
-                    return formatted
-                else:
-                    return str(result)
-            except Exception as e:
-                #results.append(f"Error: {str(e)}")
-                return f"Syntax Error e={e}"
+        # Evaluate a 'normal' expression
+        try:
+            result = self._calculate(expression)
+            print(f"result = {result}")
+            return result
+        except Exception as e:
+            return f"Syntax Error e={e}"
+
 
 
 
