@@ -57,7 +57,7 @@ class JustCalc:
         self.style = ttk.Style()
         
         # Angle mode (False=radians, True=degrees)
-        self.use_degrees = tk.BooleanVar(value=False)
+        self.use_degrees = tk.BooleanVar(value=self.calculator.get_use_degrees())
         
         self.setup_window()
         self.create_widgets()
@@ -167,6 +167,13 @@ class JustCalc:
         self.scrollbar.grid(row=0, column=2, sticky="ns")
 
         # Angle mode toggle row
+
+        def on_toggle():
+            print(f"checkbox changed {self.use_degrees.get()}")
+            self.calculator.set_use_degrees(self.use_degrees.get())
+            self.evaluate_expressions()
+            
+
         self.degrees_check = tk.Checkbutton(
             self.window,
             text="Use Degrees",
@@ -179,7 +186,7 @@ class JustCalc:
             activeforeground=self.text_fg,
             selectcolor=self.bg_color,
             highlightthickness=0,
-            command=lambda: self.evaluate_expressions()
+            command=on_toggle
         )
         self.degrees_check.grid(row=1, column=0, sticky="w", padx=self.padding, pady=(0, self.padding))
 
@@ -289,34 +296,10 @@ Supports trig functions like sin(x), cos(x), variables x=5, x^2 and more.""",
                results.append("")
                continue
                 
-            # Check for variable assignment
-            var_match = re.match(r'^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*(.+)$', line)
-            if var_match:
-                var_name, expr = var_match.groups()
-                try:
-                    #result = self._evaluate_expression(expr)
-                    result = self.calculator.calculate(expr)
-                    self.variables[var_name] = result
-                    results.append(f"{var_name} = {result}")
-                except Exception as e:
-                    #results.append(f"Error: {str(e)}")
-                    results.append("Unknown variable")
-                continue
-                
-            # Evaluate regular expression
-            try:
-                #result = self._evaluate_expression(line)
-                result = self.calculator.calculate(line)
-                if isinstance(result, float):
-                    # format float to fixed precision, strip trailing zeros but keep at least one decimal point
-                    formatted = f"{result:.{self.precision}f}"
-                    results.append(formatted)
-                else:
-                    results.append(str(result))
-            except Exception as e:
-                #results.append(f"Error: {str(e)}")
-                results.append("Syntax Error")
-        
+
+            result = str(self.calculator.calculate(line))
+            results.append(result)
+    
         # Update output text
         self.answer_text.insert(tk.END, '\n'.join(results))
         self.answer_text.config(state='disabled')
