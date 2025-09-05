@@ -1,6 +1,10 @@
 from ExpressionCalculator import ExpressionCalculator
 
 
+
+
+
+
 class ExpressionCalculatorTest:
     def __init__(self) -> None:
         print("Init ExpressionCalculator Testing")
@@ -17,34 +21,40 @@ class ExpressionCalculatorTest:
     def run_tests(self):
         print("\n\nRunning ExpressionCalculator tests")
         tests = self._get_tests()
-        
-        i=1
-        failed = 0
         failed_test_names = []
+        i=1
         for name, t in tests.items():
-            print(f"\n\nRunning test {i} of {len(tests)} {name}...")
+            print(f"\n\nRunning test {i} of {len(tests)}...")
             
-            try:
-                t()
-                print(f"SUCCESS {name}")
-            except Exception as e:
-                failed += 1
-                #failed_test_names.append(name)
+            if not (result := t()):
                 failed_test_names.append({'name': name, 'num': i})
-                print(f"FAILED {name}   error: {e}")
-                #print(f"{e}")
 
             i += 1
         
-        if failed == 0:
+        if len(failed_test_names) == 0:
             print(f"\n\nTesting finished. Successfully! {len(tests)} tests")
         else:
-            print(f"\n\nTesting finished. Failed {failed}/{len(tests)}")
+            print(f"\n\nTesting finished. Failed {len(failed_test_names)}/{len(tests)}")
             for t in failed_test_names:
                 print(f"    {t['num']}:    {t['name']}")
 
     
+    # Decorator
+    def test_state(func):
+        def wrapper(self):
+            print(f"START {func.__name__}")
+            try:
+                func(self)
+            except Exception as e:
+                print(f"FAILED! {func.__name__}")
+                return False
+            print(f"SUCCESS! {func.__name__}")
+            return True
+        return wrapper
+
+
     ### Test declarations below ###
+    @test_state
     def test_addition(self):
             calc = ExpressionCalculator()
             res = calc.calculate("5+5")
@@ -52,6 +62,7 @@ class ExpressionCalculatorTest:
                 raise Exception(f"failed addition: {res}")
         
 
+    @test_state
     def test_subtraction(self):
         calc = ExpressionCalculator()
         res = calc.calculate("10-5")
@@ -59,6 +70,7 @@ class ExpressionCalculatorTest:
             raise Exception(f"failed subtraction: {res}")
 
 
+    @test_state
     def test_multiplication(self):
         calc = ExpressionCalculator()
         res = calc.calculate("5*5")
@@ -66,6 +78,7 @@ class ExpressionCalculatorTest:
             raise Exception(f"failed multiplication: {res}")
     
 
+    @test_state
     def test_division(self):
         calc = ExpressionCalculator()
         res = calc.calculate("25/5")
@@ -73,6 +86,7 @@ class ExpressionCalculatorTest:
             raise Exception(f"failed multiplication: {res}")
     
 
+    @test_state
     def test_syntax_error(self):
         calc = ExpressionCalculator()
         res = calc.calculate("25sdferw")
@@ -80,6 +94,7 @@ class ExpressionCalculatorTest:
             raise Exception(f"failed syntax error test: {res}")
     
 
+    @test_state
     def test_unknown_variable(self):
         calc = ExpressionCalculator()
         res = calc.calculate("x")
@@ -87,6 +102,7 @@ class ExpressionCalculatorTest:
             raise Exception(f"failed unknown variable test: {res}")
 
 
+    @test_state
     def test_variable_assignment(self):
         calc = ExpressionCalculator()
         res = calc.calculate("x=5")
@@ -94,6 +110,7 @@ class ExpressionCalculatorTest:
             raise Exception(f"failed variable assignment test: {res}")
 
 
+    @test_state
     def test_set_use_degrees(self):
         calc = ExpressionCalculator()
         calc.set_use_degrees(True)
@@ -104,6 +121,7 @@ class ExpressionCalculatorTest:
             raise Exception(f"failed to set use degrees to True")
 
 
+    @test_state
     def test_set_use_radians(self):
         calc = ExpressionCalculator()
         calc.set_use_degrees(False)
@@ -114,6 +132,7 @@ class ExpressionCalculatorTest:
             raise Exception(f"failed to set use degrees to False")
 
 
+    @test_state
     def test_use_degrees(self):
         calc = ExpressionCalculator()
         calc.set_use_degrees(True)
@@ -122,6 +141,7 @@ class ExpressionCalculatorTest:
             raise Exception(f"failed use degrees test: {res}")
 
 
+    @test_state
     def test_use_radians(self):
         calc = ExpressionCalculator()
         calc.set_use_degrees(False)
@@ -130,6 +150,7 @@ class ExpressionCalculatorTest:
             raise Exception(f"failed use radians test: {res}")
 
 
+    @test_state
     def test_does_contain_undeclared_variable(self):
         calc = ExpressionCalculator()
         #NOTE! should really be one test method for each case.
@@ -149,6 +170,7 @@ class ExpressionCalculatorTest:
             raise Exception(f"  failed DOES contain undeclared variable test: {failed_tests}")
 
 
+    @test_state
     def test_does_not_contain_undeclared_variable(self):
         calc = ExpressionCalculator()
         #NOTE! should really be one test method for each case.
