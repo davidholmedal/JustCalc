@@ -201,6 +201,15 @@ class ExpressionCalculatorTest:
 
 
     @test_state
+    def test_use_existing_variable_in_calculation(self) -> None:
+        calc = ExpressionCalculator()
+
+        calc.calculate("x=4")
+        res: str = calc.calculate("x+2")
+        if res != '6':
+            raise Exception(f"  Failed! x=4; x+2)=='6")
+
+    @test_state
     def test_use_existing_variable_in_assignment_expression(self) -> None:
         calc = ExpressionCalculator()
 
@@ -208,3 +217,4 @@ class ExpressionCalculatorTest:
         res: str = calc.calculate("y=x+4")
         if res != '8':
             raise Exception(f"  Failed! x=4; (y=x+4)=='8")
+

@@ -2,21 +2,23 @@ import tkinter as tk
 from tkinter import ttk
 import tkinter.font as tkFont
 import sys
-import math
-import re
+from ExpressionCalculator import ExpressionCalculator
+from ExpressionCalculatorTest import ExpressionCalculatorTest
+
 
 class JustCalc:
     """A calculator application using ttk widgets."""
     
-    def __init__(self):
+    def __init__(self, calculator: ExpressionCalculator) -> None:
         """Initialize the calculator application."""
         
-        # Variables dictionary to store user-defined variables
-        self.variables = {
-            'pi': math.pi,
-            'e': math.e
-        }
-
+        self.calculator: ExpressionCalculator = calculator
+        
+        self.window = tk.Tk()
+        self.style = ttk.Style()
+        
+        self.use_degrees = tk.BooleanVar(value=self.calculator.get_use_degrees())
+        
 
         # Configure dark mode colors
         self.black = "#000000"
@@ -48,20 +50,12 @@ class JustCalc:
         self.border_color = self.light_color
         self.border_selected_color = self.light_accent_color
         self.arrow_color = self.text_color #arrow
-
-        
-
-
-        self.window = tk.Tk()
-        self.style = ttk.Style()
-        
-        # Angle mode (False=radians, True=degrees)
-        self.use_degrees = tk.BooleanVar(value=False)
         
         self.setup_window()
         self.create_widgets()
-        
-    def setup_window(self):
+    
+    
+    def setup_window(self) -> None:
         """Configure the main window properties."""
 
         self.window.title("JustCalc")
@@ -76,17 +70,8 @@ class JustCalc:
         self.style.theme_use('clam')
         
         
-    def create_widgets(self):
+    def create_widgets(self) -> None:
         """Create and arrange all the widgets."""
-        """ 
-        self.frame_left = tk.Frame(self.window, bg=self.bg_color)
-        self.frame_middle = tk.Frame(self.window, bg=self.bg_color)
-        self.frame_right = tk.Frame(self.window, bg=self.bg_color)
-
-        self.frame_left.grid(row=0, column=0, sticky="nsew")
-        self.frame_middle.grid(row=0, column=1, sticky="nsew")
-        self.frame_right.grid(row=0, column=2, sticky="nsew")
-        """
 
         # Make columns expand
         self.window.grid_columnconfigure(0, weight=8, minsize=200)
@@ -144,28 +129,29 @@ class JustCalc:
             bordercolor=self.black,  
             arrowcolor=self.arrow_color     
         )
+
         self.scrollbar = ttk.Scrollbar(
             #self.frame_right, 
             self.window, 
             style="Custom.Vertical.TScrollbar"
         )
 
-        self.expression_text.tag_configure('sel', background=self.select_bg_color, foreground=self.select_fg_color)
-        self.answer_text.tag_configure('sel', background=self.select_bg_color, foreground=self.select_fg_color)
+
+        self.expression_text.tag_configure('sel')
+        self.answer_text.tag_configure('sel')
 
 
-        # Pack widgets with proper spacing for dark theme
-        
-        #self.expression_text.pack(fill=tk.BOTH, side=tk.LEFT, expand=True, padx=(4,4), pady=10)
-        #self.answer_text.pack(fill=tk.BOTH, side=tk.LEFT, expand=False, padx=(0,4), pady=10)
-        #self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y, padx=(0,4), pady=10)
-
-        
         self.expression_text.grid(row=0, column=0, sticky="nsew", padx=(self.padding,self.padding), pady=self.padding)
         self.answer_text.grid(row=0, column=1, sticky="nsew", padx=(0,self.padding), pady=self.padding)
         self.scrollbar.grid(row=0, column=2, sticky="ns")
 
-        # Angle mode toggle row
+        # Angle mode toggle
+        def on_toggle() -> None:
+            print(f"checkbox changed {self.use_degrees.get()}")
+            self.calculator.set_use_degrees(self.use_degrees.get())
+            self.evaluate_expressions()
+            
+
         self.degrees_check = tk.Checkbutton(
             self.window,
             text="Use Degrees",
@@ -178,7 +164,7 @@ class JustCalc:
             activeforeground=self.text_fg,
             selectcolor=self.bg_color,
             highlightthickness=0,
-            command=lambda: self.evaluate_expressions()
+            command=on_toggle
         )
         self.degrees_check.grid(row=1, column=0, sticky="w", padx=self.padding, pady=(0, self.padding))
 
@@ -197,12 +183,12 @@ Supports trig functions like sin(x), cos(x), variables x=5, x^2 and more.""",
         
 
         # Function to sync scrolling
-        def sync_scroll(*args):
+        def sync_scroll(*args) -> None:
             # Update scrollbar position
             self.scrollbar.set(*args)
             
 
-        def scroll_both(*args):
+        def scroll_both(*args) -> None:
             # Synchronize both text widgets when scrollbar is moved
             self.expression_text.yview(*args)
             self.answer_text.yview(*args)
@@ -221,7 +207,7 @@ Supports trig functions like sin(x), cos(x), variables x=5, x^2 and more.""",
 
         
 
-        def _select_expression_initial():
+        def _select_expression_initial() -> None:
             self.expression_text.focus_set()
             #self.expression_text.tag_add("sel", "1.0", "end-1c")
             #self.expression_text.mark_set("insert", "end-1c")
@@ -229,7 +215,7 @@ Supports trig functions like sin(x), cos(x), variables x=5, x^2 and more.""",
         self.window.after(0, _select_expression_initial)
 
 
-    def sync_scroll_positions(self):
+    def sync_scroll_positions(self) -> None:
         """Synchronize the scroll positions of both text widgets."""
         try:
             # Get current scroll position from expression text
@@ -240,28 +226,28 @@ Supports trig functions like sin(x), cos(x), variables x=5, x^2 and more.""",
             pass  # Ignore any scroll-related errors
     
 
-    def needs_scrollbar(self, text):
+    def needs_scrollbar(self, text: tk.Text) -> bool:
         """Checks vertical size"""
         font = tkFont.Font(font=text['font'])
         font_height = font.metrics("linespace")
-        print("Font height:", font_height)
+        #print("Font height:", font_height)
 
         visible_lines = text.winfo_height() // font_height
         total_lines = int(text.index("end-1c").split(".")[0])
 
         if total_lines > visible_lines:
-            print("Vertical overflow detected")
+            #print("Vertical overflow detected")
             return True
         return False
 
 
 
-    def update_scrollbar_visibility(self, event=None):
+    def update_scrollbar_visibility(self, event=None) -> None:
         """Check if scrollbar should be visible and show/hide accordingly."""
-        print("check scrollbar vis")
+        #print("check scrollbar vis")
 
         if self.needs_scrollbar(self.expression_text):
-            print("needs scrollbar")
+            #print("needs scrollbar")
             #self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y, padx=(0, 10), pady=10)
             self.scrollbar.grid(row=0, column=2, sticky="ns")
         else:
@@ -269,7 +255,7 @@ Supports trig functions like sin(x), cos(x), variables x=5, x^2 and more.""",
             #self.scrollbar.pack_forget()
     
     
-    def evaluate_expressions(self, event=None):
+    def evaluate_expressions(self, event=None) -> None:
         # Get all lines from input
         input_lines = self.expression_text.get("1.0", tk.END).split('\n')
         # Remove the last empty line that tk.END creates
@@ -288,32 +274,10 @@ Supports trig functions like sin(x), cos(x), variables x=5, x^2 and more.""",
                results.append("")
                continue
                 
-            # Check for variable assignment
-            var_match = re.match(r'^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*(.+)$', line)
-            if var_match:
-                var_name, expr = var_match.groups()
-                try:
-                    result = self._evaluate_expression(expr)
-                    self.variables[var_name] = result
-                    results.append(f"{var_name} = {result}")
-                except Exception as e:
-                    #results.append(f"Error: {str(e)}")
-                    results.append("Unknown variable")
-                continue
-                
-            # Evaluate regular expression
-            try:
-                result = self._evaluate_expression(line)
-                if isinstance(result, float):
-                    # format float to fixed precision, strip trailing zeros but keep at least one decimal point
-                    formatted = f"{result:.{self.precision}f}"
-                    results.append(formatted)
-                else:
-                    results.append(str(result))
-            except Exception as e:
-                #results.append(f"Error: {str(e)}")
-                results.append("Syntax Error")
-        
+
+            result = str(self.calculator.calculate(line))
+            results.append(result)
+    
         # Update output text
         self.answer_text.insert(tk.END, '\n'.join(results))
         self.answer_text.config(state='disabled')
@@ -326,57 +290,26 @@ Supports trig functions like sin(x), cos(x), variables x=5, x^2 and more.""",
     
 
 
-    def delayed_scrollbar_check(self, event=None):
+    def delayed_scrollbar_check(self, event=None) -> None:
         """Check scrollbar visibility after a short delay to ensure widget updates are complete."""
         self.window.after(100, self.update_scrollbar_visibility)
     
-    def _evaluate_expression(self, expr):
-        # Replace variable names with their values
-        for var_name, value in self.variables.items():
-            # Use word boundaries to avoid partial matches
-            expr = re.sub(r'\b' + re.escape(var_name) + r'\b', str(value), expr)
-        
-        # Replace ^ with ** for exponentiation
-        expr = expr.replace('^', '**')
-        
-        # Add math module functions to the local namespace
-        local_vars = {
-            'sin': (lambda x: math.sin(math.radians(x))) if self.use_degrees.get() else math.sin,
-            'cos': (lambda x: math.cos(math.radians(x))) if self.use_degrees.get() else math.cos,
-            'tan': (lambda x: math.tan(math.radians(x))) if self.use_degrees.get() else math.tan,
-            'sqrt': math.sqrt,
-            'log': math.log10,  # Using log10 as log to match calculator convention
-            'ln': math.log,     # Natural logarithm
-            'exp': math.exp,
-            'radians': math.radians,
-            'degrees': math.degrees,
-            'abs': abs,
-            'round': round,
-            'pi': math.pi,
-            'e': math.e
-        }
-        
-        try:
-            # Evaluate the expression safely
-            result = eval(expr, {"__builtins__": {}}, local_vars)
-            # Convert to integer if it's a whole number for cleaner display
-            if isinstance(result, float) and result.is_integer():
-                return int(result)
-            return result
-        except Exception as e:
-            raise ValueError(f"Could not evaluate: {expr}")
 
 
-    def run(self):
+    def run(self) -> None:
         """Start the application main loop."""
         self.window.mainloop()
         
 
 
-def main():
+def main() -> None:
     """Main entry point for the application."""
     try:
-        app = JustCalc()
+        tests = ExpressionCalculatorTest()
+        tests.run_tests()
+
+        calculator = ExpressionCalculator(True)
+        app = JustCalc(calculator)
         app.run()
     except KeyboardInterrupt:
         print("\nApplication interrupted by user.")

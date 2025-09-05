@@ -21,7 +21,7 @@ class ExpressionCalculator:
             'pi': math.pi,
             'e': math.e,
         }
-        
+
         self.math_vars_radians: dict[str, object] = self.math_vars | {
             'sin': (lambda x: math.sin(x)),
             'cos': (lambda x: math.cos(x)),
@@ -50,8 +50,9 @@ class ExpressionCalculator:
             var_name, expr = var_match.groups()
 
             try:
-                result = self._calculate(expr)
-                self.user_vars[var_name] = result
+                result: str = self._calculate(expr)
+                number_result = float(result)
+                self.user_vars[var_name] = number_result
                 
                 return True, result
             except Exception as e:
@@ -76,21 +77,28 @@ class ExpressionCalculator:
 
 
     def _get_vars(self) -> dict[str, object]:
+        print(f"{self.user_vars = }")
         if self.get_use_degrees():
-            vars = self.math_vars_degrees.copy()
-            vars.update(self.user_vars)
-            return vars
+            #vars = self.math_vars_degrees.copy()
+            #vars.update(self.user_vars)
+            #return vars
+            return self.math_vars_degrees | self.user_vars
         else:
-            vars = self.math_vars_radians.copy()
-            vars.update(self.user_vars)
-            return vars
+            #vars = self.math_vars_radians.copy()
+            #vars.update(self.user_vars)
+            #return vars
+            return self.math_vars_radians | self.user_vars
         
 
-
     def _calculate(self, expression: str = "") -> str:
-        #print(f"_calculate({expression})")
+        print(f"_calculate({expression})")
         try:
-            result = eval(expression, {"__builtins__": {}}, self._get_vars())
+            the_vars = self._get_vars()
+
+            for name, val in the_vars.items():
+                print(f"{name = } {val = }")
+
+            result = eval(expression, {"__builtins__": {}}, the_vars)
             print(f"    {result = } {type(result)}")
 
             if isinstance(result, int):
@@ -116,10 +124,6 @@ class ExpressionCalculator:
 
     def calculate(self, expression: str = "") -> str:
         
-        # Cleanup input string
-        if expression is None:
-            raise ValueError("expression is None")
-
         expression = expression.strip()
 
         # Is expression an empty string?
