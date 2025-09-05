@@ -21,21 +21,18 @@ class ExpressionCalculator:
             'pi': math.pi,
             'e': math.e,
         }
-
-        self.math_vars_degrees: dict[str, object] = {
-            'sin': (lambda x: math.sin(math.radians(x))),
-            'cos': (lambda x: math.cos(math.radians(x))),
-            'tan': (lambda x: math.tan(math.radians(x))),
-        }
-
-        self.math_vars_radians: dict[str, object] = {
+        
+        self.math_vars_radians: dict[str, object] = self.math_vars | {
             'sin': (lambda x: math.sin(x)),
             'cos': (lambda x: math.cos(x)),
             'tan': (lambda x: math.tan(x)),
         }
 
-        self.math_vars_degrees.update(self.math_vars)
-        self.math_vars_radians.update(self.math_vars)
+        self.math_vars_degrees: dict[str, object] = self.math_vars | {
+            'sin': (lambda x: math.sin(math.radians(x))),
+            'cos': (lambda x: math.cos(math.radians(x))),
+            'tan': (lambda x: math.tan(math.radians(x))),
+        }
         
 
     def set_use_degrees(self, state: bool = True) -> None:
