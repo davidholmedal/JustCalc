@@ -11,16 +11,16 @@ from ExpressionCalculatorTest import ExpressionCalculatorTest
 class JustCalc:
     """A calculator application using ttk widgets."""
     
-    def __init__(self, calculator):
+    def __init__(self, calculator: ExpressionCalculator) -> None:
         """Initialize the calculator application."""
         
-        self.calculator = calculator
+        self.calculator: ExpressionCalculator = calculator
         
         self.window = tk.Tk()
         self.style = ttk.Style()
         
         self.use_degrees = tk.BooleanVar(value=self.calculator.get_use_degrees())
-
+        
 
         # Configure dark mode colors
         self.black = "#000000"
@@ -57,7 +57,7 @@ class JustCalc:
         self.create_widgets()
     
     
-    def setup_window(self):
+    def setup_window(self) -> None:
         """Configure the main window properties."""
 
         self.window.title("JustCalc")
@@ -72,7 +72,7 @@ class JustCalc:
         self.style.theme_use('clam')
         
         
-    def create_widgets(self):
+    def create_widgets(self) -> None:
         """Create and arrange all the widgets."""
 
         # Make columns expand
@@ -131,30 +131,24 @@ class JustCalc:
             bordercolor=self.black,  
             arrowcolor=self.arrow_color     
         )
+
         self.scrollbar = ttk.Scrollbar(
             #self.frame_right, 
             self.window, 
             style="Custom.Vertical.TScrollbar"
         )
 
-        self.expression_text.tag_configure('sel', background=self.select_bg_color, foreground=self.select_fg_color)
-        self.answer_text.tag_configure('sel', background=self.select_bg_color, foreground=self.select_fg_color)
+
+        self.expression_text.tag_configure('sel')
+        self.answer_text.tag_configure('sel')
 
 
-        # Pack widgets with proper spacing for dark theme
-        
-        #self.expression_text.pack(fill=tk.BOTH, side=tk.LEFT, expand=True, padx=(4,4), pady=10)
-        #self.answer_text.pack(fill=tk.BOTH, side=tk.LEFT, expand=False, padx=(0,4), pady=10)
-        #self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y, padx=(0,4), pady=10)
-
-        
         self.expression_text.grid(row=0, column=0, sticky="nsew", padx=(self.padding,self.padding), pady=self.padding)
         self.answer_text.grid(row=0, column=1, sticky="nsew", padx=(0,self.padding), pady=self.padding)
         self.scrollbar.grid(row=0, column=2, sticky="ns")
 
-        # Angle mode toggle row
-
-        def on_toggle():
+        # Angle mode toggle
+        def on_toggle() -> None:
             print(f"checkbox changed {self.use_degrees.get()}")
             self.calculator.set_use_degrees(self.use_degrees.get())
             self.evaluate_expressions()
@@ -191,12 +185,12 @@ Supports trig functions like sin(x), cos(x), variables x=5, x^2 and more.""",
         
 
         # Function to sync scrolling
-        def sync_scroll(*args):
+        def sync_scroll(*args) -> None:
             # Update scrollbar position
             self.scrollbar.set(*args)
             
 
-        def scroll_both(*args):
+        def scroll_both(*args) -> None:
             # Synchronize both text widgets when scrollbar is moved
             self.expression_text.yview(*args)
             self.answer_text.yview(*args)
@@ -215,7 +209,7 @@ Supports trig functions like sin(x), cos(x), variables x=5, x^2 and more.""",
 
         
 
-        def _select_expression_initial():
+        def _select_expression_initial() -> None:
             self.expression_text.focus_set()
             #self.expression_text.tag_add("sel", "1.0", "end-1c")
             #self.expression_text.mark_set("insert", "end-1c")
@@ -223,7 +217,7 @@ Supports trig functions like sin(x), cos(x), variables x=5, x^2 and more.""",
         self.window.after(0, _select_expression_initial)
 
 
-    def sync_scroll_positions(self):
+    def sync_scroll_positions(self) -> None:
         """Synchronize the scroll positions of both text widgets."""
         try:
             # Get current scroll position from expression text
@@ -234,7 +228,7 @@ Supports trig functions like sin(x), cos(x), variables x=5, x^2 and more.""",
             pass  # Ignore any scroll-related errors
     
 
-    def needs_scrollbar(self, text):
+    def needs_scrollbar(self, text: tk.Text) -> bool:
         """Checks vertical size"""
         font = tkFont.Font(font=text['font'])
         font_height = font.metrics("linespace")
@@ -250,7 +244,7 @@ Supports trig functions like sin(x), cos(x), variables x=5, x^2 and more.""",
 
 
 
-    def update_scrollbar_visibility(self, event=None):
+    def update_scrollbar_visibility(self, event=None) -> None:
         """Check if scrollbar should be visible and show/hide accordingly."""
         #print("check scrollbar vis")
 
@@ -263,7 +257,7 @@ Supports trig functions like sin(x), cos(x), variables x=5, x^2 and more.""",
             #self.scrollbar.pack_forget()
     
     
-    def evaluate_expressions(self, event=None):
+    def evaluate_expressions(self, event=None) -> None:
         # Get all lines from input
         input_lines = self.expression_text.get("1.0", tk.END).split('\n')
         # Remove the last empty line that tk.END creates
@@ -298,19 +292,19 @@ Supports trig functions like sin(x), cos(x), variables x=5, x^2 and more.""",
     
 
 
-    def delayed_scrollbar_check(self, event=None):
+    def delayed_scrollbar_check(self, event=None) -> None:
         """Check scrollbar visibility after a short delay to ensure widget updates are complete."""
         self.window.after(100, self.update_scrollbar_visibility)
     
 
 
-    def run(self):
+    def run(self) -> None:
         """Start the application main loop."""
         self.window.mainloop()
         
 
 
-def main():
+def main() -> None:
     """Main entry point for the application."""
     try:
         tests = ExpressionCalculatorTest()
